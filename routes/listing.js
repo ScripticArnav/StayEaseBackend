@@ -1,21 +1,33 @@
-import { Listing } from "../models/index.model.js";
-import { upload } from "../middlewares/multer.middleware.js";
-import { Router } from "express";
+const router = require("express").Router();
+const multer = require("multer");
 
-const router = Router();
+const Listing = require("../models/Listing");
+const User = require("../models/User")
 
-// create listing
+/* Configuration Multer for File Upload */
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/uploads/"); // Store uploaded files in the 'uploads' folder
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname); // Use the original file name
+  },
+});
+
+const upload = multer({ storage });
+
+/* CREATE LISTING */
 router.post("/create", upload.array("listingPhotos"), async (req, res) => {
   try {
-    // information from the form
+    /* Take the information from the form */
     const {
       creator,
       category,
       type,
-      streetAdress,
+      streetAddress,
       aptSuite,
-      province,
       city,
+      province,
       country,
       guestCount,
       bedroomCount,
@@ -23,129 +35,104 @@ router.post("/create", upload.array("listingPhotos"), async (req, res) => {
       bathroomCount,
       amenities,
       title,
-      desc,
+      description,
       highlight,
-      highlightDetails,
+      highlightDesc,
       price,
     } = req.body;
 
-    const listingPhotos = req.files;
+    const listingPhotos = req.files
+
     if (!listingPhotos) {
-      return res.status(400).json("No file uploaded");
+      return res.status(400).send("No file uploaded.")
     }
-    const listingphotoPaths = listingPhotos.map((file) => file.path);
+
+    const listingPhotoPaths = listingPhotos.map((file) => file.path)
 
     const newListing = new Listing({
       creator,
       category,
       type,
-      streetAdress,
+      streetAddress,
       aptSuite,
-      province,
       city,
+      province,
       country,
       guestCount,
       bedroomCount,
       bedCount,
       bathroomCount,
       amenities,
-      listingphotoPaths,
+      listingPhotoPaths,
       title,
-      desc,
+      description,
       highlight,
-      highlightDetails,
+      highlightDesc,
       price,
-    });
+    })
 
-    await newListing.save();
+    await newListing.save()
 
-    res.status(200).json(newListing);
-  } catch (error) {
-    res
-      .status(409)
-      .json({ message: "failed to create Listing", error: error.message });
-    console.log(error);
+    res.status(200).json(newListing)
+  } catch (err) {
+    res.status(409).json({ message: "Fail to create Listing", error: err.message })
+    console.log(err)
   }
 });
 
-/* Get listing by category */
+/* GET lISTINGS BY CATEGORY */
 router.get("/", async (req, res) => {
-  const qCategory = req.query.category;
+  const qCategory = req.query.category
 
   try {
-    let listings;
+    let listings
     if (qCategory) {
-      listings = await Listing.find({ category: qCategory }).populate(
-        "creator"
-      );
+      listings = await Listing.find({ category: qCategory }).populate("creator")
     } else {
-      listings = await Listing.find().populate("creator");
+      listings = await Listing.find().populate("creator")
     }
 
-    res.status(200).json(listings);
+    res.status(200).json(listings)
   } catch (err) {
-    res
-      .status(404)
-      .json({ message: "Fail to fetch listings", error: err.message });
-    console.log(err);
+    res.status(404).json({ message: "Fail to fetch listings", error: err.message })
+    console.log(err)
   }
-});
+})
 
-/* Get  listing by search */
+/* GET LISTINGS BY SEARCH */
 router.get("/search/:search", async (req, res) => {
+  const { search } = req.params
+
   try {
-    const { search } = req.params;
-    let listings = [];
+    let listings = []
+
     if (search === "all") {
-      listings = await Listing.find().populate("creator");
+      listings = await Listing.find().populate("creator")
     } else {
       listings = await Listing.find({
         $or: [
-          { category: { $regex: search, $options: "i" } },
-          { title: { $regex: search, $options: "i" } },
-        ],
-      }).populate("creator");
+          { category: {$regex: search, $options: "i" } },
+          { title: {$regex: search, $options: "i" } },
+        ]
+      }).populate("creator")
     }
 
-    res.status(200).json(listings);
-  } catch (error) {
-    res
-      .status(404)
-      .json({ message: "Listing could not be found", error: error.message });
-    console.log(error);
+    res.status(200).json(listings)
+  } catch (err) {
+    res.status(404).json({ message: "Fail to fetch listings", error: err.message })
+    console.log(err)
   }
-});
+})
 
-/* mistakenly overwritting the listing because of not using the else part  */
-// router.get("/", async (req, res) => {
-//   const qCategory = req.query.category;
-
-//   try {
-//     let listing;
-//     if (qCategory) {
-//       listing = await Listing.findOne({ category: qCategory }).populate("creator")
-//     }
-//     listing = await Listing.find().populate("creator")
-//     res.status(200).json(listing);
-//   } catch (error) {
-//     res
-//       .status(404)
-//       .json({ message: "failed to fetch Listing", error: error.message })
-//       console.log(error)
-//   }
-// });
-
-/* Listing Details */
+/* LISTING DETAILS */
 router.get("/:listingId", async (req, res) => {
   try {
-    const { listingId } = req.params;
-    const listing = await Listing.findById(listingId).populate("creator");
-    res.status(202).json(listing);
-  } catch (error) {
-    res
-      .status(404)
-      .json({ message: "Listing could not be found", error: error.message });
+    const { listingId } = req.params
+    const listing = await Listing.findById(listingId).populate("creator")
+    res.status(202).json(listing)
+  } catch (err) {
+    res.status(404).json({ message: "Listing can not found!", error: err.message })
   }
-});
+})
 
-export default router;
+module.exports = router

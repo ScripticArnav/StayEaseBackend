@@ -1,84 +1,83 @@
-import mongoose, { Schema } from "mongoose";
+const mongoose = require("mongoose")
 
-const listingSchema = new Schema(
+const ListingSchema = new mongoose.Schema(
   {
     creator: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
     },
     category: {
       type: String,
-      require: true,
+      required: true,
     },
     type: {
       type: String,
-      require: true,
+      required: true,
     },
     streetAddress: {
       type: String,
-      require: true,
+      required: true,
     },
     aptSuite: {
       type: String,
-      require: true,
+      required: true,
     },
     city: {
       type: String,
-      require: true,
+      required: true,
     },
     province: {
       type: String,
-      require: true,
+      required: true,
     },
     country: {
       type: String,
-      require: true,
+      required: true,
     },
     guestCount: {
       type: Number,
-      require: true,
+      required: true,
     },
     bedroomCount: {
       type: Number,
-      require: true,
+      required: true,
     },
     bedCount: {
       type: Number,
-      require: true,
+      required: true,
     },
     bathroomCount: {
       type: Number,
-      require: true,
+      required: true,
     },
     amenities: {
       type: Array,
-      default: [],
+      default:[]
     },
-    listingphotoPaths: [{ type: String }],
+    listingPhotoPaths: [{ type: String }], // Store photo URLs
     title: {
       type: String,
-      required: true,
+      required: true
     },
-    desc: {
+    description: {
       type: String,
-      required: true,
+      required: true
     },
     highlight: {
       type: String,
-      required: true,
+      required: true
     },
-    highlightDetails: {
+    highlightDesc: {
       type: String,
-      required: true,
+      required: true
     },
     price: {
       type: Number,
       required: true,
-    },
+    }
   },
-  { timestamps: true }
-);
+  { timestamps: true}
+)
 
-const Listing = mongoose.model("Listing", listingSchema);
-
-export default Listing;
+const Listing = mongoose.model("Listing", ListingSchema )
+module.exports = Listing

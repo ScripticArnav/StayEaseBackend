@@ -1,79 +1,100 @@
-import { Router } from "express";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { User } from "../models/index.model.js";
-import { upload } from "../middlewares/multer.middleware.js";
+const router = require("express").Router();
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const multer = require("multer");
 
-const router = Router();
+const User = require("../models/User");
 
+/* Configuration Multer for File Upload */
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/uploads/"); // Store uploaded files in the 'uploads' folder
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname); // Use the original file name
+  },
+});
+
+const upload = multer({ storage });
+
+/* USER REGISTER */
 router.post("/register", upload.single("profileImage"), async (req, res) => {
   try {
+    /* Take all information from the form */
     const { firstName, lastName, email, password } = req.body;
 
+    /* The uploaded file is available as req.file */
     const profileImage = req.file;
 
     if (!profileImage) {
-      return res.status(400).send("NO file uploaded");
+      return res.status(400).send("No file uploaded");
     }
 
+    /* path to the uploaded profile photo */
     const profileImagePath = profileImage.path;
 
+    /* Check if user exists */
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(409).json({ message: "User already exists!" });
     }
 
+    /* Hass the password */
     const salt = await bcrypt.genSalt();
-    const hashPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
+    /* Create a new User */
     const newUser = new User({
       firstName,
       lastName,
       email,
-      password: hashPassword,
+      password: hashedPassword,
       profileImagePath,
     });
 
+    /* Save the new User */
     await newUser.save();
 
+    /* Send a successful message */
     res
       .status(200)
-      .json({ message: "User registetered Successfully", user: newUser });
+      .json({ message: "User registered successfully!", user: newUser });
   } catch (err) {
     console.log(err);
     res
-      .status(400)
-      .json({ message: "Registetered Failed", error: err.message });
+      .status(500)
+      .json({ message: "Registration failed!", error: err.message });
   }
 });
 
+/* USER LOGIN*/
 router.post("/login", async (req, res) => {
   try {
-    /* taking the Information from the login page */
-    const { email, password } = req.body;
+    /* Take the infomation from the form */
+    const { email, password } = req.body
 
-    /* Check if the user exists */
+    /* Check if user exists */
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: "User does not exist" });
+      return res.status(409).json({ message: "User doesn't exist!" });
     }
 
-    /* Compare the passwords with the hash password we stored in the database */
-
-    const isMatch = await bcrypt.compare(password, user.password);
+    /* Compare the password with the hashed password */
+    const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid Credentials" });
+      return res.status(400).json({ message: "Invalid Credentials!"})
     }
 
     /* Generate JWT token */
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
     delete user.password
 
-    res.status(200).json({token, user})
+    res.status(200).json({ token, user })
+
   } catch (err) {
     console.log(err)
-    res.status(400).json({error: err.message})
+    res.status(500).json({ error: err.message })
   }
-});
+})
 
-export default router;
+module.exports = router

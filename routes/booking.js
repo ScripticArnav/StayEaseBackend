@@ -1,28 +1,18 @@
-import Booking from "../models/booking.model.js";
-import { Router } from "express";
+const router = require("express").Router()
 
-const router = Router();
+const Booking = require("../models/Booking")
 
+/* CREATE BOOKING */
 router.post("/create", async (req, res) => {
   try {
-    const { customerId, hostId, listingId, startDate, endDate, totalPrice } =
-      req.body;
-    const newBooking = new Booking({
-      customerId,
-      hostId,
-      listingId,
-      startDate,
-      endDate,
-      totalPrice,
-    });
-    await newBooking.save();
-    res.status(200).json(newBooking);
-  } catch (error) {
-    res
-      .status(409)
-      .json({ message: "failed to create booking", error: error.message });
-    console.log(error);
+    const { customerId, hostId, listingId, startDate, endDate, totalPrice } = req.body
+    const newBooking = new Booking({ customerId, hostId, listingId, startDate, endDate, totalPrice })
+    await newBooking.save()
+    res.status(200).json(newBooking)
+  } catch (err) {
+    console.log(err)
+    res.status(400).json({ message: "Fail to create a new Booking!", error: err.message })
   }
-});
+})
 
-export default router;
+module.exports = router
