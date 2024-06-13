@@ -1,28 +1,33 @@
-const router = require("express").Router()
+import { Router } from "express";
+import Booking from "../models/booking.model.js";
+import User from "../models/user.model.js";
+import Listing from "../models/listing.model.js";
 
-const Booking = require("../models/Booking")
-const User = require("../models/User")
-const Listing = require("../models/Listing")
+const router = Router();
 
-/* GET TRIP LIST */
+/* Get Trip list */
 router.get("/:userId/trips", async (req, res) => {
   try {
-    const { userId } = req.params
-    const trips = await Booking.find({ customerId: userId }).populate("customerId hostId listingId")
-    res.status(202).json(trips)
-  } catch (err) {
-    console.log(err)
-    res.status(404).json({ message: "Can not find trips!", error: err.message })
+    const { userId } = req.params;
+    const trips = await Booking.find({ customerId: userId }).populate(
+      "customerId hostId listingId"
+    );
+    res.status(202).json(trips);
+  } catch (error) {
+    res
+      .status(409)
+      .json({ message: "can not find the trips", error: error.message });
+    console.log(error);
   }
-})
+});
 
-/* ADD LISTING TO WISHLIST */
+/* Add lIsting to the wishlist */
 router.patch("/:userId/:listingId", async (req, res) => {
   try {
     const { userId, listingId } = req.params
     const user = await User.findById(userId)
-    const listing = await Listing.findById(listingId).populate("creator")
-
+    const listing = await Listing.findById(listingId).populate("creator");
+    console.log(user)
     const favoriteListing = user.wishList.find((item) => item._id.toString() === listingId)
 
     if (favoriteListing) {
@@ -35,34 +40,39 @@ router.patch("/:userId/:listingId", async (req, res) => {
       res.status(200).json({ message: "Listing is added to wish list", wishList: user.wishList})
     }
   } catch (err) {
-    console.log(err)
+    console.log("could not do it sorry ", err)
     res.status(404).json({ error: err.message })
   }
 })
 
-/* GET PROPERTY LIST */
+/* Get Property List */
 router.get("/:userId/properties", async (req, res) => {
   try {
-    const { userId } = req.params
-    const properties = await Listing.find({ creator: userId }).populate("creator")
-    res.status(202).json(properties)
-  } catch (err) {
-    console.log(err)
-    res.status(404).json({ message: "Can not find properties!", error: err.message })
+    const { userId } = req.params;
+    const properties = await Listing.find({ creator: userId }).populate(
+      "creator"
+    );
+    res.status(202).json(properties);
+  } catch (error) {
+    res
+      .status(409)
+      .json({ message: "can not find properties", error: error.message });
+    console.log(error);
   }
-})
+});
 
-/* GET RESERVATION LIST */
+/* Get Reservation List */
 router.get("/:userId/reservations", async (req, res) => {
   try {
-    const { userId } = req.params
-    const reservations = await Booking.find({ hostId: userId }).populate("customerId hostId listingId")
-    res.status(202).json(reservations)
-  } catch (err) {
-    console.log(err)
-    res.status(404).json({ message: "Can not find reservations!", error: err.message })
+    const { userId } = req.params;
+    const reservations = await Booking.find({ hostId: userId }).populate(
+      "customerId hostId listingId")
+    res.status(202).json(reservations);
+  } catch (error) {
+    res
+      .status(409)
+      .json({ message: "can not find reservations", error: error.message });
+    console.log(error);
   }
-})
-
-
-module.exports = router
+});
+export default router;
