@@ -7,11 +7,9 @@ dotenv.config();
 
 const app = express();
 
+app.use(cors())
 app.use(express.json());
 app.use(express.static("public"));
-app.use("/", (req, res) => {
-  res.send("Server is Running")
-})
 /* Routes */
 import authRoutes from "./routes/auth.js";
 app.use("/auth", authRoutes);
